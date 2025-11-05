@@ -3,19 +3,34 @@ import { ref } from 'vue'
 import { useApi } from '../composables/useApi'
 
 export const useTasksStore = defineStore('tasks', () => {
+  // Estado reactivo
   const tasks = ref([])
+  const loading = ref(false)
+  const error = ref(null)
+  
   const { getTasks } = useApi()
 
   const fetchTasks = async () => {
+    loading.value = true
+    error.value = null
     try {
-      tasks.value = await getTasks()
-      console.log('📊 Tareas cargadas:', tasks.value)
-    } catch (error) {
-      console.error('Error fetching tasks:', error)
-      // Datos de respaldo
-      tasks.value = [
-        { id: 1, title: 'Tarea de ejemplo', description: 'Descripción de ejemplo', priority: 'medium', status: 'pending' }
-      ]
+      console.log('🔄 Store: Iniciando carga de tareas...')
+      const tasksData = await getTasks()
+      
+      console.log('📦 Store: Datos recibidos:', tasksData)
+      console.log('🔢 Store: Número de tareas:', tasksData.length)
+      
+      // ASIGNACIÓN DIRECTA - clave para la reactividad
+      tasks.value = Array.isArray(tasksData) ? tasksData : []
+      
+      console.log('✅ Store: Tareas cargadas exitosamente:', tasks.value.length, 'tareas')
+      
+    } catch (err) {
+      error.value = 'Error cargando tareas: ' + err.message
+      console.error('❌ Store: Error en fetchTasks:', err)
+      tasks.value = []
+    } finally {
+      loading.value = false
     }
   }
 
@@ -26,14 +41,18 @@ export const useTasksStore = defineStore('tasks', () => {
       description: task.description,
       priority: task.priority,
       status: 'pending',
+      assignee_email: 'team@company.com',
       created_at: new Date().toISOString()
     }
-    tasks.value.push(newTask)
-    console.log('➕ Nueva tarea agregada:', newTask)
+    tasks.value.unshift(newTask)
+    console.log('➕ Store: Nueva tarea agregada localmente:', newTask)
   }
 
+  // Exportar directamente las refs para reactividad
   return {
     tasks,
+    loading,
+    error,
     fetchTasks,
     addTask
   }
