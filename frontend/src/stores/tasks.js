@@ -4,35 +4,36 @@ import { useApi } from '../composables/useApi'
 
 export const useTasksStore = defineStore('tasks', () => {
   const tasks = ref([])
-  const projects = ref([])
-  const { getProjects } = useApi()
+  const { getTasks } = useApi()
 
   const fetchTasks = async () => {
     try {
-      projects.value = await getProjects()
-      // Simulamos tareas para demo
-      tasks.value = [
-        { id: 1, title: 'Diseñar logo', status: 'completed', priority: 'high' },
-        { id: 2, title: 'Desarrollar API', status: 'in-progress', priority: 'high' },
-        { id: 3, title: 'Documentación', status: 'pending', priority: 'medium' }
-      ]
+      tasks.value = await getTasks()
+      console.log('📊 Tareas cargadas:', tasks.value)
     } catch (error) {
       console.error('Error fetching tasks:', error)
+      // Datos de respaldo
+      tasks.value = [
+        { id: 1, title: 'Tarea de ejemplo', description: 'Descripción de ejemplo', priority: 'medium', status: 'pending' }
+      ]
     }
   }
 
   const addTask = (task) => {
-    tasks.value.push({
+    const newTask = {
       id: Date.now(),
-      ...task,
+      title: task.title,
+      description: task.description,
+      priority: task.priority,
       status: 'pending',
       created_at: new Date().toISOString()
-    })
+    }
+    tasks.value.push(newTask)
+    console.log('➕ Nueva tarea agregada:', newTask)
   }
 
   return {
     tasks,
-    projects,
     fetchTasks,
     addTask
   }
